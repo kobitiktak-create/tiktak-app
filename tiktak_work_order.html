@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiktak Creative Solution – לוח משימה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue-dark: #0A2540;
+  --blue-mid: #1a4b8c;
+  --blue-light: #2d7dd2;
+  --blue-pale: #e8f1fb;
+  --blue-ultra: #f0f6ff;
+  --border: #c5d8f0;
+  --text: #0A2540;
+  --gray: #6b7c93;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Heebo', sans-serif; background: linear-gradient(135deg, #e8f1fb 0%, #f0f6ff 50%, #ddeeff 100%); min-height: 100vh; color: var(--text); direction: rtl; }
+
+/* PIN SCREEN */
+#lockScreen { position: fixed; inset: 0; background: var(--blue-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lock-logo { font-size: 40px; font-weight: 900; color: white; letter-spacing: -1px; margin-bottom: 4px; }
+.lock-sub { font-size: 12px; font-weight: 300; color: #90b4e6; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; }
+.lock-card { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 36px 40px 32px; width: 300px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.lock-title { font-size: 14px; font-weight: 600; color: #90b4e6; letter-spacing: 1px; }
+.pin-dots { display: flex; gap: 16px; }
+.pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); transition: all 0.2s; }
+.pin-dot.filled { background: var(--blue-light); border-color: var(--blue-light); box-shadow: 0 0 10px rgba(45,125,210,0.6); }
+.pin-dot.error { background: #dc3545; border-color: #dc3545; animation: shake 0.35s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+.key { background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; font-family: 'Heebo', sans-serif; font-size: 22px; font-weight: 700; padding: 15px; cursor: pointer; transition: all 0.15s; text-align: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+.key:hover { background: rgba(255,255,255,0.2); }
+.key:active { background: var(--blue-light); transform: scale(0.93); }
+.key.del { font-size: 17px; color: #90b4e6; }
+.key.empty { background: transparent; border-color: transparent; pointer-events: none; }
+.lock-error { color: #ff6b7a; font-size: 13px; font-weight: 600; min-height: 18px; text-align: center; }
+.lock-hint { font-size: 11px; color: rgba(255,255,255,0.25); text-align: center; }
+
+/* TOP BAR */
+.topbar { background: var(--blue-dark); color: white; padding: 12px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(10,37,64,0.4); }
+.brand-logo { font-size: 22px; font-weight: 900; color: white; }
+.brand-sub { font-size: 11px; font-weight: 300; color: #90b4e6; letter-spacing: 1px; text-transform: uppercase; }
+.topbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { padding: 8px 18px; border-radius: 6px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--blue-light); color: white; }
+.btn-primary:hover { background: #2070c4; transform: translateY(-1px); }
+.btn-outline { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); }
+.btn-success { background: #1db87c; color: white; }
+.btn-success:hover { background: #18a46f; }
+.btn-danger { background: #dc3545; color: white; font-size: 12px; padding: 6px 12px; }
+
+/* FORM */
+.form-wrapper { max-width: 900px; margin: 32px auto; padding: 0 20px 60px; }
+.meta-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.meta-card { background: white; border: 2px solid var(--border); border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 150px; }
+.meta-card label { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+.meta-card input { border: none; outline: none; font-family: 'Heebo', sans-serif; font-size: 16px; font-weight: 700; color: var(--blue-dark); width: 100%; background: transparent; }
+.section { background: white; border-radius: 14px; border: 2px solid var(--border); margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 12px rgba(10,37,64,0.06); }
+.section-header { background: var(--blue-dark); color: white; padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
+.section-header .icon { font-size: 18px; }
+.section-header h2 { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.section-body { padding: 20px; }
+.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.span2 { grid-column: span 2; }
+.field label { font-size: 11px; font-weight: 700; color: var(--blue-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field textarea { border: 2px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: 'Heebo', sans-serif; font-size: 14px; color: var(--text); background: var(--blue-ultra); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; }
+.field input:focus, .field textarea:focus { border-color: var(--blue-light); background: white; }
+.field textarea { resize: vertical; min-height: 80px; }
+.priority-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.priority-option { display: none; }
+.priority-label { padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--gray); }
+.priority-option:checked + .priority-label { border-color: var(--blue-light); background: var(--blue-light); color: white; }
+.priority-option[value="urgent"]:checked + .priority-label { border-color: #dc3545; background: #dc3545; }
+.priority-option[value="low"]:checked + .priority-label { border-color: #6c757d; background: #6c757d; }
+
+/* Parts table */
+.parts-table { width: 100%; border-collapse: collapse; }
+.parts-table th { background: var(--blue-pale); padding: 10px 12px; font-size: 12px; font-weight: 700; color: var(--blue-mid); text-transform: uppercase; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.parts-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.parts-table tbody tr:hover { background: var(--blue-ultra); }
+.parts-table td input { border: 1.5px solid transparent; border-radius: 6px; padding: 7px 10px; font-family: 'Heebo', sans-serif; font-size: 14px; width: 100%; background: transparent; outline: none; transition: border-color 0.2s; }
+.parts-table td input:focus { border-color: var(--blue-light); background: white; }
+.col-num { width: 36px; text-align: center; color: var(--gray); font-size: 13px; font-weight: 700; }
+.col-qty { width: 80px; } .col-price { width: 110px; } .col-total { width: 110px; } .col-del { width: 40px; }
+.parts-table td input[type="number"] { text-align: center; }
+.total-row { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 16px; padding: 14px 16px; background: var(--blue-dark); border-radius: 10px; color: white; }
+.total-label { font-size: 14px; font-weight: 600; }
+.total-amount { font-size: 26px; font-weight: 900; }
+.add-row-btn { margin-top: 10px; background: var(--blue-pale); border: 2px dashed var(--border); color: var(--blue-mid); padding: 8px 16px; border-radius: 8px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.add-row-btn:hover { border-color: var(--blue-light); color: var(--blue-light); }
+
+/* Status */
+.status-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.status-opt { display: none; }
+.status-lbl { padding: 7px 14px; border-radius: 6px; border: 2px solid var(--border); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--gray); }
+.status-opt[value="open"]:checked + .status-lbl { background: #e8f5e9; border-color: #1db87c; color: #0e7a50; }
+.status-opt[value="progress"]:checked + .status-lbl { background: #fff3cd; border-color: #f0a500; color: #7d5800; }
+.status-opt[value="done"]:checked + .status-lbl { background: #e3f0ff; border-color: var(--blue-light); color: var(--blue-mid); }
+.status-opt[value="cancelled"]:checked + .status-lbl { background: #fce8e8; border-color: #dc3545; color: #a80000; }
+
+/* PHOTOS */
+.photo-buttons { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.photo-btn { flex: 1; min-width: 130px; padding: 20px 16px; border: 2.5px dashed var(--border); border-radius: 12px; background: var(--blue-ultra); color: var(--blue-mid); font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; overflow: hidden; }
+.photo-btn:hover { border-color: var(--blue-light); background: var(--blue-pale); color: var(--blue-light); }
+.photo-btn .btn-icon { font-size: 30px; }
+.photo-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photos-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.photo-thumb { position: relative; width: 100px; height: 100px; border-radius: 10px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 2px 8px rgba(10,37,64,0.1); }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.remove-photo { position: absolute; top: 4px; left: 4px; background: rgba(220,53,69,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* CAMERA MODAL */
+.cam-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.cam-overlay.open { opacity: 1; pointer-events: all; }
+.cam-box { background: var(--blue-dark); border-radius: 20px; padding: 24px; width: 440px; max-width: 95vw; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.cam-box h3 { color: white; font-size: 18px; font-weight: 700; }
+#cameraVideo { width: 100%; border-radius: 12px; background: #000; max-height: 300px; object-fit: cover; display: block; }
+#cameraCanvas { display: none; }
+.cam-actions { display: flex; gap: 14px; align-items: center; }
+.cam-snap { background: white; color: var(--blue-dark); border: none; border-radius: 50%; width: 64px; height: 64px; font-size: 26px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.cam-snap:hover { transform: scale(1.08); }
+.cam-flip { background: rgba(255,255,255,0.12); color: white; border: 1.5px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 10px 16px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cam-close-btn { background: rgba(255,255,255,0.08); color: white; border: none; border-radius: 10px; padding: 10px 20px; font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+/* SIGNATURE */
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.sig-box { display: flex; flex-direction: column; gap: 8px; }
+.sig-box label { font-size: 12px; font-weight: 700; color: var(--blue-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+canvas.sig-canvas { border: 2px solid var(--border); border-radius: 10px; background: var(--blue-ultra); cursor: crosshair; touch-action: none; display: block; width: 100%; height: 120px; }
+.sig-actions { display: flex; gap: 8px; }
+.sig-clear { font-size: 12px; padding: 5px 12px; background: transparent; border: 1.5px solid var(--border); border-radius: 6px; color: var(--gray); cursor: pointer; font-family: 'Heebo', sans-serif; font-weight: 600; transition: all 0.2s; }
+.sig-clear:hover { border-color: #dc3545; color: #dc3545; }
+
+/* SEND MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,37,64,0.6); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; backdrop-filter: blur(4px); }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: white; border-radius: 16px; padding: 32px; width: 420px; max-width: 95vw; box-shadow: 0 20px 60px rgba(10,37,64,0.3); transform: translateY(20px); transition: transform 0.2s; direction: rtl; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal h3 { font-size: 20px; font-weight: 900; color: var(--blue-dark); margin-bottom: 6px; }
+.modal .modal-sub { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.modal .field { margin-bottom: 14px; }
+.modal .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-direction: row-reverse; flex-wrap: wrap; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--blue-dark); color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9000; transition: transform 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media print {
+  body { background: white; }
+  #lockScreen, .topbar, .add-row-btn, .btn-danger, .col-del, .sig-actions, .photo-buttons { display: none !important; }
+  .form-wrapper { max-width: 100%; padding: 0; margin: 0; }
+  .section { box-shadow: none; break-inside: avoid; }
+}
+@media (max-width: 600px) {
+  .fields-grid { grid-template-columns: 1fr; }
+  .field.span2 { grid-column: span 1; }
+  .sig-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 10px 16px; }
+  .brand-sub { display: none; }
+  .lock-card { width: 90vw; padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ PIN SCREEN ══ -->
+<div id="lockScreen">
+  <div class="lock-logo">Tiktak</div>
+  <div class="lock-sub">Creative Solution</div>
+  <div class="lock-card">
+    <div class="lock-title">הזן קוד כניסה</div>
+    <div class="pin-dots" id="pinDots"></div>
+    <div class="keypad">
+      <button class="key" onclick="pinPress('1')">1</button>
+      <button class="key" onclick="pinPress('2')">2</button>
+      <button class="key" onclick="pinPress('3')">3</button>
+      <button class="key" onclick="pinPress('4')">4</button>
+      <button class="key" onclick="pinPress('5')">5</button>
+      <button class="key" onclick="pinPress('6')">6</button>
+      <button class="key" onclick="pinPress('7')">7</button>
+      <button class="key" onclick="pinPress('8')">8</button>
+      <button class="key" onclick="pinPress('9')">9</button>
+      <button class="key empty"></button>
+      <button class="key" onclick="pinPress('0')">0</button>
+      <button class="key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="lock-error" id="lockError"></div>
+    <div class="lock-hint">🔒 גישה מורשית בלבד</div>
+  </div>
+</div>
+
+<!-- ══ TOP BAR ══ -->
+<div class="topbar">
+  <div>
+    <div class="brand-logo">Tiktak</div>
+    <div class="brand-sub">Creative Solution</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-outline" onclick="clearForm()">🗑 ניקוי</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨 הדפסה</button>
+    <button class="btn btn-primary" onclick="openSendModal()">📨 שליחה ללקוח</button>
+    <button class="btn btn-success" onclick="saveForm()">💾 שמירה</button>
+    <button class="btn btn-outline" onclick="lockApp()" title="נעל">🔒</button>
+  </div>
+</div>
+
+<!-- ══ FORM ══ -->
+<div class="form-wrapper">
+
+  <div class="meta-row">
+    <div class="meta-card"><label>מספר הזמנה</label><input type="text" id="orderNum" placeholder="TT-0001" /></div>
+    <div class="meta-card"><label>תאריך פתיחה</label><input type="date" id="dateOpen" /></div>
+    <div class="meta-card"><label>תאריך יעד</label><input type="date" id="dateDue" /></div>
+    <div class="meta-card">
+      <label>סטטוס</label>
+      <div class="status-wrap">
+        <input type="radio" name="status" class="status-opt" id="s1" value="open" checked><label for="s1" class="status-lbl">פתוח</label>
+        <input type="radio" name="status" class="status-opt" id="s2" value="progress"><label for="s2" class="status-lbl">בתהליך</label>
+        <input type="radio" name="status" class="status-opt" id="s3" value="done"><label for="s3" class="status-lbl">הושלם</label>
+        <input type="radio" name="status" class="status-opt" id="s4" value="cancelled"><label for="s4" class="status-lbl">בוטל</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">🏢</span><h2>פרטי לקוח / חברה</h2></div>
+    <div class="section-body">
+      <div class="fields-grid">
+        <div class="field"><label>חברה / מקום שירות</label><input type="text" id="company" placeholder="שם החברה" /></div>
+        <div class="field"><label>שם איש קשר</label><input type="text" id="contact" placeholder="שם מלא" /></div>
+        <div class="field span2"><label>כתובת</label><input type="text" id="address" placeholder="רחוב, מספר, עיר" /></div>
+        <div class="field"><label>טלפון</label><input type="tel" id="phone" placeholder="050-0000000" /></div>
+        <div class="field"><label>דוא"ל</label><input type="email" id="email" placeholder="client@email.com" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">🔧</span><h2>פרטי משימה</h2></div>
+    <div class="section-body">
+      <div class="fields-grid">
+        <div class="field"><label>סוג משימה</label><input type="text" id="taskType" placeholder="תיקון / התקנה / תחזוקה..." /></div>
+        <div class="field">
+          <label>עדיפות</label>
+          <div class="priority-group">
+            <input type="radio" name="priority" class="priority-option" id="p_urgent" value="urgent"><label for="p_urgent" class="priority-label">🔴 דחוף</label>
+            <input type="radio" name="priority" class="priority-option" id="p_normal" value="normal" checked><label for="p_normal" class="priority-label">🟡 רגיל</label>
+            <input type="radio" name="priority" class="priority-option" id="p_low" value="low"><label for="p_low" class="priority-label">🟢 נמוכה</label>
+          </div>
+        </div>
+        <div class="field"><label>טכנאי מטפל</label><input type="text" id="technician" placeholder="שם הטכנאי" /></div>
+        <div class="field"><label>מיקום ביצוע</label><input type="text" id="location" placeholder="היכן מתבצע השירות" /></div>
+        <div class="field span2"><label>תיאור המשימה</label><textarea id="taskDesc" rows="3" placeholder="תאר את המשימה, הבעיה, או מה נדרש לבצע..."></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">🔩</span><h2>חלפים / תיקון</h2></div>
+    <div class="section-body">
+      <table class="parts-table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th style="text-align:right">תיאור חלק / שירות</th>
+            <th class="col-qty" style="text-align:center">כמות</th>
+            <th class="col-price" style="text-align:center">מחיר יח' (₪)</th>
+            <th class="col-total" style="text-align:center">סה"כ (₪)</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="partsBody"></tbody>
+      </table>
+      <button class="add-row-btn" onclick="addPartRow()">+ הוסף שורה</button>
+      <div class="total-row">
+        <span class="total-label">סה"כ לתשלום (כולל מע"מ 18%):</span>
+        <span class="total-amount" id="grandTotal">₪0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">📷</span><h2>תמונות / מסמכים</h2></div>
+    <div class="section-body">
+      <div class="photo-buttons">
+        <div class="photo-btn">
+          <span class="btn-icon">🖼</span><span>בחר מהגלריה</span>
+          <input type="file" accept="image/*" multiple onchange="handlePhotos(this)">
+        </div>
+        <div class="photo-btn">
+          <span class="btn-icon">📸</span><span>צלם (מצלמה)</span>
+          <input type="file" accept="image/*" capture="environment" onchange="handlePhotos(this)">
+        </div>
+        <button class="photo-btn" onclick="openCamera()">
+          <span class="btn-icon">🎥</span><span>מצלמה ישירה</span>
+        </button>
+      </div>
+      <div class="photos-grid" id="photosGrid"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">📝</span><h2>הערות</h2></div>
+    <div class="section-body">
+      <div class="field"><textarea id="notes" rows="3" placeholder="הוסף הערות, הנחיות מיוחדות, תנאי תשלום..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="icon">✍️</span><h2>חתימות ואישור</h2></div>
+    <div class="section-body">
+      <div class="sig-grid">
+        <div class="sig-box">
+          <label>חתימת לקוח</label>
+          <canvas class="sig-canvas" id="sigClient" width="400" height="120"></canvas>
+          <div class="sig-actions"><button class="sig-clear" onclick="clearSig('sigClient')">✕ נקה</button></div>
+        </div>
+        <div class="sig-box">
+          <label>חתימת טכנאי</label>
+          <canvas class="sig-canvas" id="sigTech" width="400" height="120"></canvas>
+          <div class="sig-actions"><button class="sig-clear" onclick="clearSig('sigTech')">✕ נקה</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CAMERA MODAL ══ -->
+<div class="cam-overlay" id="camOverlay">
+  <div class="cam-box">
+    <h3>📷 מצלמה ישירה</h3>
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <canvas id="cameraCanvas"></canvas>
+    <div class="cam-actions">
+      <button class="cam-flip" onclick="flipCamera()">🔄 הפוך</button>
+      <button class="cam-snap" onclick="snapPhoto()">📸</button>
+      <button class="cam-close-btn" onclick="closeCamera()">סגור</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEND MODAL ══ -->
+<div class="modal-overlay" id="sendModal">
+  <div class="modal">
+    <h3>📨 שליחה ללקוח</h3>
+    <p class="modal-sub">בחר כיצד לשלוח את הטופס</p>
+    <div class="field"><label>דוא"ל ללקוח</label><input type="email" id="sendEmail" placeholder="client@email.com" /></div>
+    <div class="field"><label>טלפון (WhatsApp)</label><input type="tel" id="sendPhone" placeholder="050-0000000" /></div>
+    <div class="field"><label>הודעה נלווית</label><textarea rows="2" id="sendMsg" placeholder="שלום, מצורף לוח המשימה שלך..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="sendEmailAction()">📧 מייל</button>
+      <button class="btn btn-success" onclick="sendWhatsApp()">💬 WhatsApp</button>
+      <button class="btn btn-outline" style="color:#333;border-color:#ccc" onclick="closeSendModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   🔐 PIN – שנה את הסיסמה בשורה הבאה:
+══════════════════════════════════════════ */
+const ACCESS_PIN = "1234"; // ← שנה כאן את הסיסמה שלך
+/* ══════════════════════════════════════════ */
+
+let pinEntered = '';
+
+// בנה נקודות לפי אורך הסיסמה
+(function() {
+  const c = document.getElementById('pinDots');
+  for (let i = 0; i < ACCESS_PIN.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'pin-dot';
+    d.id = 'dot' + i;
+    c.appendChild(d);
+  }
+})();
+
+function pinPress(d) {
+  if (pinEntered.length >= ACCESS_PIN.length) return;
+  pinEntered += d;
+  document.getElementById('dot' + (pinEntered.length - 1)).classList.add('filled');
+  document.getElementById('lockError').textContent = '';
+  if (pinEntered.length === ACCESS_PIN.length) setTimeout(checkPin, 130);
+}
+
+function pinDel() {
+  if (!pinEntered.length) return;
+  document.getElementById('dot' + (pinEntered.length - 1)).classList.remove('filled');
+  pinEntered = pinEntered.slice(0, -1);
+  document.getElementById('lockError').textContent = '';
+}
+
+function checkPin() {
+  if (pinEntered === ACCESS_PIN) {
+    document.getElementById('lockScreen').style.display = 'none';
+    sessionStorage.setItem('tiktak_ok', '1');
+  } else {
+    document.getElementById('lockError').textContent = '❌ קוד שגוי, נסה שוב';
+    document.querySelectorAll('.pin-dot').forEach(d => { d.classList.remove('filled'); d.classList.add('error'); });
+    setTimeout(() => { document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error')); pinEntered = ''; }, 650);
+  }
+}
+
+function lockApp() {
+  pinEntered = '';
+  document.querySelectorAll('.pin-dot').forEach(d => { d.className = 'pin-dot'; });
+  document.getElementById('lockError').textContent = '';
+  document.getElementById('lockScreen').style.display = 'flex';
+  sessionStorage.removeItem('tiktak_ok');
+}
+
+if (sessionStorage.getItem('tiktak_ok') === '1') document.getElementById('lockScreen').style.display = 'none';
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lockScreen').style.display === 'none') return;
+  if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+  if (e.key === 'Backspace') pinDel();
+});
+
+/* ══ DATE & ORDER NUM ══ */
+document.getElementById('dateOpen').valueAsDate = new Date();
+const savedCtr = parseInt(localStorage.getItem('tiktak_ctr') || '0');
+const nextNum = savedCtr + 1;
+document.getElementById('orderNum').value = 'TT-' + String(nextNum).padStart(4, '0');
+
+/* ══ PARTS TABLE ══ */
+let rowCount = 0;
+function addPartRow(desc='', qty='', price='') {
+  rowCount++;
+  const id = rowCount;
+  const tr = document.createElement('tr');
+  tr.dataset.row = id;
+  tr.innerHTML = `
+    <td class="col-num">${id}</td>
+    <td><input type="text" placeholder="שם חלק / שירות" value="${desc}" oninput="calcRow(${id})"></td>
+    <td class="col-qty"><input type="number" min="0" step="0.5" placeholder="1" value="${qty}" oninput="calcRow(${id})"></td>
+    <td class="col-price"><input type="number" min="0" step="0.01" placeholder="0.00" value="${price}" oninput="calcRow(${id})"></td>
+    <td class="col-total"><input type="number" readonly tabindex="-1" style="color:var(--blue-mid);font-weight:700;background:var(--blue-ultra);"></td>
+    <td class="col-del"><button class="btn btn-danger" onclick="removeRow(${id})">✕</button></td>
+  `;
+  document.getElementById('partsBody').appendChild(tr);
+  calcRow(id);
+}
+function removeRow(id) { document.querySelector(`tr[data-row="${id}"]`).remove(); calcTotal(); }
+function calcRow(id) {
+  const row = document.querySelector(`tr[data-row="${id}"]`);
+  if (!row) return;
+  const inp = row.querySelectorAll('input');
+  const t = (parseFloat(inp[1].value)||0) * (parseFloat(inp[2].value)||0);
+  inp[3].value = t ? t.toFixed(2) : '';
+  calcTotal();
+}
+function calcTotal() {
+  let s = 0;
+  document.querySelectorAll('#partsBody tr').forEach(tr => { s += parseFloat(tr.querySelectorAll('input')[3].value) || 0; });
+  document.getElementById('grandTotal').textContent = '₪' + (s * 1.18).toFixed(2);
+}
+addPartRow(); addPartRow(); addPartRow();
+
+/* ══ SIGNATURES ══ */
+function initCanvas(id) {
+  const c = document.getElementById(id), ctx = c.getContext('2d');
+  let drawing = false, lx = 0, ly = 0;
+  ctx.strokeStyle = '#0A2540'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const pos = e => { const r = c.getBoundingClientRect(), sx = c.width/r.width, sy = c.height/r.height, s = e.touches ? e.touches[0] : e; return [(s.clientX-r.left)*sx, (s.clientY-r.top)*sy]; };
+  const start = e => { e.preventDefault(); drawing=true; [lx,ly]=pos(e); };
+  const draw = e => { if(!drawing)return; e.preventDefault(); const [x,y]=pos(e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke(); [lx,ly]=[x,y]; };
+  const stop = () => drawing=false;
+  c.addEventListener('mousedown',start); c.addEventListener('mousemove',draw); c.addEventListener('mouseup',stop); c.addEventListener('mouseleave',stop);
+  c.addEventListener('touchstart',start,{passive:false}); c.addEventListener('touchmove',draw,{passive:false}); c.addEventListener('touchend',stop);
+}
+function clearSig(id) { const c=document.getElementById(id); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+initCanvas('sigClient'); initCanvas('sigTech');
+
+/* ══ PHOTOS ══ */
+const photos = [];
+function handlePhotos(input) {
+  Array.from(input.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => { photos.push({id: Date.now()+Math.random(), src: e.target.result}); renderPhotos(); };
+    r.readAsDataURL(f);
+  });
+  input.value = '';
+}
+function removePhoto(id) { const i=photos.findIndex(p=>p.id===id); if(i>-1) photos.splice(i,1); renderPhotos(); }
+function renderPhotos() {
+  document.getElementById('photosGrid').innerHTML = photos.map(p =>
+    `<div class="photo-thumb"><img src="${p.src}"><button class="remove-photo" onclick="removePhoto(${p.id})">✕</button></div>`
+  ).join('');
+}
+
+/* ══ LIVE CAMERA ══ */
+let camStream = null, facingMode = 'environment';
+async function openCamera() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode}, audio:false});
+    document.getElementById('cameraVideo').srcObject = camStream;
+    document.getElementById('camOverlay').classList.add('open');
+  } catch(e) { showToast('❌ אין גישה למצלמה – נסה את כפתור "צלם"'); }
+}
+function closeCamera() {
+  if(camStream) { camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  document.getElementById('camOverlay').classList.remove('open');
+}
+async function flipCamera() {
+  facingMode = facingMode==='environment'?'user':'environment';
+  if(camStream) camStream.getTracks().forEach(t=>t.stop());
+  try { camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode},audio:false}); document.getElementById('cameraVideo').srcObject=camStream; }
+  catch(e) { showToast('❌ לא ניתן להפוך'); }
+}
+function snapPhoto() {
+  const v=document.getElementById('cameraVideo'), c=document.getElementById('cameraCanvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  photos.push({id:Date.now()+Math.random(), src:c.toDataURL('image/jpeg',0.85)});
+  renderPhotos();
+  showToast('📸 תמונה נצלמה!');
+}
+
+/* ══ SEND MODAL ══ */
+function openSendModal() {
+  const em=document.getElementById('email').value, ph=document.getElementById('phone').value;
+  if(em) document.getElementById('sendEmail').value=em;
+  if(ph) document.getElementById('sendPhone').value=ph;
+  document.getElementById('sendModal').classList.add('open');
+}
+function closeSendModal() { document.getElementById('sendModal').classList.remove('open'); }
+document.getElementById('sendModal').addEventListener('click', e => { if(e.target===document.getElementById('sendModal')) closeSendModal(); });
+
+function collectData() {
+  const rows=[];
+  document.querySelectorAll('#partsBody tr').forEach(tr => {
+    const i=tr.querySelectorAll('input');
+    if(i[0].value) rows.push(`${i[0].value} | כמות: ${i[1].value} | ₪${i[2].value}`);
+  });
+  return {
+    order:document.getElementById('orderNum').value, date:document.getElementById('dateOpen').value,
+    company:document.getElementById('company').value, contact:document.getElementById('contact').value,
+    address:document.getElementById('address').value, phone:document.getElementById('phone').value,
+    taskType:document.getElementById('taskType').value, taskDesc:document.getElementById('taskDesc').value,
+    parts:rows.join('\n'), total:document.getElementById('grandTotal').textContent,
+    notes:document.getElementById('notes').value,
+  };
+}
+
+function sendEmailAction() {
+  const to=document.getElementById('sendEmail').value, msg=document.getElementById('sendMsg').value, d=collectData();
+  const sub=encodeURIComponent(`לוח משימה Tiktak – ${d.order}`);
+  const body=encodeURIComponent(`שלום ${d.contact||''},\n\n${msg||'מצורף פרטי לוח המשימה:'}\n\nמס' הזמנה: ${d.order}\nתאריך: ${d.date}\nחברה: ${d.company}\nכתובת: ${d.address}\n\nמשימה: ${d.taskType}\n${d.taskDesc}\n\nחלפים:\n${d.parts}\n\n${d.total}\n\nהערות: ${d.notes}\n\nTiktak Creative Solution`);
+  window.location.href=`mailto:${to}?subject=${sub}&body=${body}`;
+  closeSendModal(); showToast('📧 נפתח לקוח המייל');
+}
+
+function sendWhatsApp() {
+  const raw=document.getElementById('sendPhone').value.replace(/\D/g,'');
+  const phone=raw.startsWith('0')?'972'+raw.slice(1):raw;
+  const msg=document.getElementById('sendMsg').value, d=collectData();
+  const text=encodeURIComponent(`*לוח משימה Tiktak – ${d.order}*\n\n`+(msg?msg+'\n\n':'')+`📅 תאריך: ${d.date}\n🏢 חברה: ${d.company}\n📍 כתובת: ${d.address}\n\n🔧 משימה: ${d.taskType}\n${d.taskDesc}\n\n`+(d.parts?`🔩 חלפים:\n${d.parts}\n\n`:'')+`💰 סה"כ: ${d.total}\n\n`+(d.notes?`📝 הערות: ${d.notes}\n\n`:'')+`_Tiktak Creative Solution_`);
+  window.open(`https://wa.me/${phone}?text=${text}`,'_blank');
+  closeSendModal(); showToast('💬 נפתח WhatsApp');
+}
+
+/* ══ SAVE / LOAD / CLEAR ══ */
+function saveForm() {
+  const data = {
+    orderNum:document.getElementById('orderNum').value, dateOpen:document.getElementById('dateOpen').value,
+    dateDue:document.getElementById('dateDue').value, company:document.getElementById('company').value,
+    contact:document.getElementById('contact').value, address:document.getElementById('address').value,
+    phone:document.getElementById('phone').value, email:document.getElementById('email').value,
+    taskType:document.getElementById('taskType').value, taskDesc:document.getElementById('taskDesc').value,
+    technician:document.getElementById('technician').value, location:document.getElementById('location').value,
+    notes:document.getElementById('notes').value, photos:photos,
+    sigClient:document.getElementById('sigClient').toDataURL(),
+    sigTech:document.getElementById('sigTech').toDataURL(),
+  };
+  localStorage.setItem('tiktak_form', JSON.stringify(data));
+  localStorage.setItem('tiktak_ctr', nextNum);
+  showToast('✅ נשמר בהצלחה!');
+}
+
+function loadSaved() {
+  const raw=localStorage.getItem('tiktak_form');
+  if(!raw) return;
+  try {
+    const d=JSON.parse(raw);
+    ['orderNum','dateOpen','dateDue','company','contact','address','phone','email','taskType','taskDesc','technician','location','notes'].forEach(k=>{
+      const el=document.getElementById(k); if(el&&d[k]) el.value=d[k];
+    });
+    if(d.sigClient){const c=document.getElementById('sigClient'),img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0);img.src=d.sigClient;}
+    if(d.sigTech){const c=document.getElementById('sigTech'),img=new Image();img.onload=()=>c.getContext('2d').drawImage(img,0,0);img.src=d.sigTech;}
+    if(d.photos&&d.photos.length){d.photos.forEach(p=>photos.push(p));renderPhotos();}
+  } catch(e){}
+}
+
+function clearForm() {
+  if(!confirm('לנקות את הטופס? הנתונים לא ישמרו.')) return;
+  localStorage.removeItem('tiktak_form'); location.reload();
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+loadSaved();
+</script>
+</body>
+</html>
